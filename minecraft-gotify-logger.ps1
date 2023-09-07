@@ -29,11 +29,6 @@ function Send-GotifyMessage {
           "client::display" = @{
               "contentType" = "text/markdown"
           }
-          "client::notification" = @{
-              "click" = @{
-                  "url" = "https://minecraft.demelt.net/mcraft"
-              }
-          }
         }
     }
 
