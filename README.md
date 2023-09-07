@@ -2,14 +2,14 @@
 [![Docker Build](https://github.com/gigigig/bedrock-docker-gotify/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/gigigig/bedrock-docker-gotify/actions/workflows/docker-publish.yml)
 [![PowerShell lint](https://github.com/gigigig/bedrock-docker-gotify/actions/workflows/ps-linter.yml/badge.svg)](https://github.com/gigigig/bedrock-docker-gotify/actions/workflows/ps-linter.yml)
 
-A Gotify Notification Service for Docker Minecraft Bedrock Servers.
+A [Gotify](https://gotify.net/) Notification Service for Docker Minecraft Bedrock Servers.
 Notifies upon Connection or Disconnection of Players. 
 No Minecraft Plugins or Addons required. 
 
 ![Showing Connection Messages in Gotify](../main/gotify-notice.png)
 
 ## Requirements
-- Minecraft Bedrock Server running in Docker
+- [Minecraft Bedrock Server](https://github.com/itzg/docker-minecraft-server) running in Docker
 - Running Minecraft Logger Container with read access to Docker socket on the same host
 
 ## How to run
