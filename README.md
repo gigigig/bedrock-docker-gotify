@@ -20,16 +20,18 @@ Define the environment variables:
  - ``` MGRAM_CONTAINER_NAME "..." ``` Set the name of the Minecraft Bedrock container you want to monitor
  - Edit your docker compose file and add the notifier as a new service:
 
-```yaml
-bds-gotify-notifier:
-    image: ghcr.io/gigigig/bedrock-docker-gotify:latest
-    environment:
-      MGRAM_GOTIFY_URL : "YOUR_GOTIFY_URL"
-      MGRAM_GOTIFY_TOKEN: "YOUR_GOTIFY_URL"
-      MGRAM_CONTAINER_NAME: "YOUR_BEDROCK_CONTAINER_NAME"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-```
+    ```yaml
+    bds-gotify-notifier:
+        image: ghcr.io/gigigig/bedrock-docker-gotify:latest
+        environment:
+          MGRAM_GOTIFY_URL : "YOUR_GOTIFY_URL"
+          MGRAM_GOTIFY_TOKEN: "YOUR_GOTIFY_TOKEN"
+          MGRAM_CONTAINER_NAME: "YOUR_BEDROCK_CONTAINER_NAME"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+    ```
+- Run ``` docker compose up -d --file docker-compose.yml ``` to start your compose stack
+
 See [docker-compose.yml](../main/docker-compose.yml) for a full example. 
 
 ### Build with Dockerfile
