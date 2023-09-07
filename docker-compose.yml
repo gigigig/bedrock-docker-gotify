@@ -1,0 +1,28 @@
+version: '3.5' 
+services: 
+  bds-server: 
+    image: itzg/minecraft-bedrock-server 
+    container_name: bds-server
+    environment: 
+      EULA: "TRUE" 
+      GAMEMODE: survival 
+      DIFFICULTY: easy
+    ports: 
+      - 19132:19132/udp 
+    volumes: 
+      - bds:/data
+    stdin_open: true 
+    tty: true 
+  
+  bds-gotify-notifier:
+    image: ghcr.io/gigigig/bedrock-docker-gotify:latest
+    environment:
+      MGRAM_GOTIFY_URL : "YOUR_GOTIFY_URL"
+      MGRAM_GOTIFY_TOKEN: "YOUR_GOTIFY_URL"
+      MGRAM_CONTAINER_NAME: "bds-server"
+    container_name: bds-gotify-notifier
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
+                                                               
+volumes: 
+  bds:
