@@ -65,15 +65,15 @@ while ($true) {
     $dockerLogs = docker logs --tail=128 $containerName
 
     # Filter new log entries matching the specified patterns
-    $newEntries = $dockerLogs | Where-Object { $_ -match "(Player connected|Player disconnected): (.+), xuid: (.+)" }
+    $newEntries = $dockerLogs | Where-Object { $_ -match "(Player connected|Player disconnected): (.+), xuid: (\d+).*" }
 
     # Process new entries and send them as Gotify webhooks
     foreach ($entry in $newEntries) {
         # Check if the entry has been previously sent
         if ($previousEntries -notcontains $entry) {
             # Extract the player and xuid information from the log entry
-            $player = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (.+)", '$2'
-            $xuid = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (.+)", '$3'
+            $player = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (\d+).*", '$2'
+            $xuid = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (\d+).*", '$3'
 
             # Determine the message based on the log entry type with Markdown formatting
             if ($entry -match "Player connected") {
