@@ -1,28 +1,46 @@
 name: PowerShell lint
-on: 
+on:
   push:
-    paths-ignore:
-      - '**.md'
+    paths:
+      - '**/*.ps1'
+  pull_request:
+    paths:
+      - '**/*.ps1'
 
 jobs:
     lint-with-PSScriptAnalyzer:
         name: Install and run PSScriptAnalyzer
         runs-on: ubuntu-latest
         steps:
-          - uses: actions/checkout@v3
+          - uses: actions/checkout@v4
           - name: Install PSScriptAnalyzer module
             shell: pwsh
             run: |
               Set-PSRepository PSGallery -InstallationPolicy Trusted
-              Install-Module PSScriptAnalyzer -ErrorAction Stop
+              Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force -ErrorAction Stop
           - name: Lint with PSScriptAnalyzer
             shell: pwsh
+            id: pssa
             run: |
-              Invoke-ScriptAnalyzer -Path *.ps1 -Recurse -Outvariable issues
-              $errors   = $issues.Where({$_.Severity -eq 'Error'})
-              $warnings = $issues.Where({$_.Severity -eq 'Warning'})
-              if ($errors) {
-                  Write-Error "There were $($errors.Count) errors and $($warnings.Count) warnings total." -ErrorAction Stop
+              $results  = Invoke-ScriptAnalyzer -Path *.ps1 -Recurse | Out-String
+              $errors   = ($results | Select-String 'Severity\s*: Error').Count
+              $warnings = ($results | Select-String 'Severity\s*: Warning').Count
+              "results<<EOF" >> $Env:GITHUB_OUTPUT
+              $results >> $Env:GITHUB_OUTPUT
+              "EOF" >> $Env:GITHUB_OUTPUT
+              if ($errors -gt 0) {
+                  Write-Error "There were $errors errors and $warnings warnings total." -ErrorAction Stop
               } else {
-                  Write-Output "There were $($errors.Count) errors and $($warnings.Count) warnings total."
+                  Write-Output "There were $errors errors and $warnings warnings total."
               }
+          - name: Comment results
+            if: github.event_name == 'pull_request'
+            uses: peter-evans/create-or-update-comment@v4
+            with:
+              token: ${{ github.token }}
+              issue-number: ${{ github.event.pull_request.number }}
+              body: |
+                ### PSScriptAnalyzer Results
+                ```
+                ${{ steps.pssa.outputs.results }}
+                ```
