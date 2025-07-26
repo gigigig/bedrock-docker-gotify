@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/gigigig/bedrock-docker-gotify/compare/v1.0.0...v1.0.1) (2025-07-26)
+
+
+### Bug Fixes
+
+* run cosign non interactive ([20eb075](https://github.com/gigigig/bedrock-docker-gotify/commit/20eb075e3c351fcedfc71b06d6f9559a6f5cba0e))
+* run cosign non interactive ([036524e](https://github.com/gigigig/bedrock-docker-gotify/commit/036524e994645a69f82e8c0ae6337bc9161752ba))
+
 ## 1.0.0 (2025-07-26)
 
 
