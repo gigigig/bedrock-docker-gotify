@@ -7,6 +7,10 @@ on:
     paths:
       - '**/*.ps1'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
     lint-with-PSScriptAnalyzer:
         name: Install and run PSScriptAnalyzer
