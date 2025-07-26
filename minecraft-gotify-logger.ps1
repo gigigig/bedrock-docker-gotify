@@ -57,6 +57,13 @@ Write-Verbose -Message "Using Gotify URL: $($gotifyUrl)/message" -Verbose
 
 # Initialize an array to store previous log entries
 $previousEntries = @()
+# Hashtable to track pfid by xuid from spawn events
+$playerPfids = @{}
+
+# Regular expression pattern to extract player information
+$entryPattern = [regex]'(?i)Player\s+(?<action>connected|disconnected):\s*(?<player>[^,]+),\s*xuid:\s*(?<xuid>\d+)(?:,\s*pfid:\s*(?<pfid>[0-9a-f]+))?'
+# Regex for spawn events that include pfid
+$spawnPattern = [regex]'(?i)Player Spawned:\s*(?<player>[^ ]+)\s+xuid:\s*(?<xuid>\d+),\s*pfid:\s*(?<pfid>[0-9a-f]+)'
 
 # Continuously monitor Docker logs and send new events to the Gotify webhook
 while ($true) {
@@ -65,28 +72,46 @@ while ($true) {
     $dockerLogs = docker logs --tail=128 $containerName
 
     # Filter new log entries matching the specified patterns
-    $newEntries = $dockerLogs | Where-Object { $_ -match "(Player connected|Player disconnected): (.+), xuid: (\d+).*" }
+    $newEntries = $dockerLogs | Where-Object { $entryPattern.IsMatch($_) -or $spawnPattern.IsMatch($_) }
 
     # Process new entries and send them as Gotify webhooks
     foreach ($entry in $newEntries) {
-        # Check if the entry has been previously sent
-        if ($previousEntries -notcontains $entry) {
-            # Extract the player and xuid information from the log entry
-            $player = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (\d+).*", '$2'
-            $xuid = $entry -replace "(Player connected|Player disconnected): (.+), xuid: (\d+).*", '$3'
+        if ($previousEntries -contains $entry) { continue }
 
-            # Determine the message based on the log entry type with Markdown formatting
-            if ($entry -match "Player connected") {
-                $message = "Connected: **$($player.Substring(31))** `nxuid: $($xuid.Substring(31))"
-            } else {
-                $message = "Disconnected: **$($player.Substring(31))** `nxuid: $($xuid.Substring(31))"
-            }
-
-            # Send the message as a Gotify webhook
-            Send-GotifyMessage -message $message
-
-            # Add the entry to the list of previous entries
+        # Handle spawn events to collect pfid information
+        if ($spawnPattern.IsMatch($entry)) {
+            $match = $spawnPattern.Match($entry)
+            $xuid  = $match.Groups['xuid'].Value.Trim()
+            $pfid  = $match.Groups['pfid'].Value.Trim()
+            if ($xuid -and $pfid) { $playerPfids[$xuid] = $pfid }
             $previousEntries += $entry
+            continue
         }
+
+        # Extract player info from connect/disconnect logs
+        $match   = $entryPattern.Match($entry)
+        $player  = $match.Groups['player'].Value.Trim()
+        $xuid    = $match.Groups['xuid'].Value.Trim()
+        $action  = $match.Groups['action'].Value.ToLower()
+        $pfid    = $match.Groups['pfid'].Value.Trim()
+
+        if ($pfid) {
+            $playerPfids[$xuid] = $pfid
+        } elseif ($playerPfids.ContainsKey($xuid)) {
+            $pfid = $playerPfids[$xuid]
+        }
+
+        # Determine the message based on the log entry type with Markdown formatting
+        if ($action -eq 'connected') {
+            $actionWord = 'Connected'
+        } else {
+            $actionWord = 'Disconnected'
+        }
+
+        $message = "${actionWord}: **$player** `nxuid: $xuid"
+        if ($pfid) { $message += "`npfid: $pfid" }
+
+        Send-GotifyMessage -message $message
+        $previousEntries += $entry
     }
 }
